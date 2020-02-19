@@ -224,33 +224,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_pathPoints:
-  - m_position: {x: -1, y: 0}
+  - m_position: {x: 1.1289907, y: -0.064495206}
     m_linkedPointsIndexes: 01000000
-  - m_position: {x: 0.72564256, y: 0.1105621}
-    m_linkedPointsIndexes: 030000000200000000000000
-  - m_position: {x: 2.019236, y: 0.000000059604645}
-    m_linkedPointsIndexes: 0400000001000000
-  - m_position: {x: 1.6108887, y: -1.6312337}
+  - m_position: {x: 2.1289907, y: -0.064495206}
+    m_linkedPointsIndexes: 0200000000000000
+  - m_position: {x: 3.0572195, y: 1.9630477}
     m_linkedPointsIndexes: 01000000
-  - m_position: {x: 3.019236, y: 0.000000059604645}
-    m_linkedPointsIndexes: 02000000
   m_segments:
   - m_inAnchorIndex: 0
     m_outAnchorIndex: 1
-    m_inControlOffset: {x: 0.6025847, y: -1.5489868}
-    m_outControlOffset: {x: -0.9172088, y: -1.6772408}
+    m_inControlOffset: {x: 1.8393064, y: -2.2430568}
+    m_outControlOffset: {x: 1.8393071, y: 1.0318062}
   - m_inAnchorIndex: 1
     m_outAnchorIndex: 2
-    m_inControlOffset: {x: 0.42127597, y: 0.9040129}
-    m_outControlOffset: {x: -0.41888154, y: 0.995529}
-  - m_inAnchorIndex: 1
-    m_outAnchorIndex: 3
-    m_inControlOffset: {x: 1.1625084, y: -0.42913914}
-    m_outControlOffset: {x: 0.3747568, y: 1.1926153}
-  - m_inAnchorIndex: 2
-    m_outAnchorIndex: 4
-    m_inControlOffset: {x: 0.39994526, y: 0.90934557}
-    m_outControlOffset: {x: 0.0014739037, y: 0.6540218}
+    m_inControlOffset: {x: -3.902407, y: 2.8437424}
+    m_outControlOffset: {x: 1.8393078, y: 1.0318062}
 --- !u!4 &1689612047
 Transform:
   m_ObjectHideFlags: 0
