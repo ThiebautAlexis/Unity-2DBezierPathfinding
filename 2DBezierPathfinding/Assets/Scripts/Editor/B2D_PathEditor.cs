@@ -37,7 +37,6 @@ public class B2D_PathEditor : Editor
             {
                 AddNewSegment(i); 
             }
-
         }
         if (Event.current.control && m_selectedIndex >= 0)
         {
@@ -260,13 +259,6 @@ public class B2D_PathEditor : Editor
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI(); 
-        if(m_selectedIndex != -1)
-        {
-            if(GUILayout.Button("Add new segment after the selected point"))
-            {
-                AddNewSegment(m_selectedIndex); 
-            }
-        }
     }
 
     private void OnEnable()

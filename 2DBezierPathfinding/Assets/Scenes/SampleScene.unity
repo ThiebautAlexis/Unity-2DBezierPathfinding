@@ -112,6 +112,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &16584464
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 16584465}
+  - component: {fileID: 16584466}
+  m_Layer: 0
+  m_Name: Agent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &16584465
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16584464}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &16584466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 16584464}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb40c20f97e2ab940a257b4e403a4875, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_currentNavigationPath: {fileID: 1689612046}
+  m_destination: {x: 3.47, y: 3.88}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,21 +269,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_pathPoints:
-  - m_position: {x: 1.1289907, y: -0.064495206}
-    m_linkedPointsIndexes: 01000000
+  - m_position: {x: 0, y: 0}
+    m_linkedPointsIndexes: 0500000001000000
   - m_position: {x: 2.1289907, y: -0.064495206}
     m_linkedPointsIndexes: 0200000000000000
   - m_position: {x: 3.0572195, y: 1.9630477}
-    m_linkedPointsIndexes: 01000000
+    m_linkedPointsIndexes: 0300000001000000
+  - m_position: {x: 5.431747, y: 1.9449618}
+    m_linkedPointsIndexes: 0400000002000000
+  - m_position: {x: 3.2112079, y: 4.4995255}
+    m_linkedPointsIndexes: 0500000003000000
+  - m_position: {x: -0.76914334, y: 3.634674}
+    m_linkedPointsIndexes: 0000000004000000
   m_segments:
   - m_inAnchorIndex: 0
     m_outAnchorIndex: 1
-    m_inControlOffset: {x: 1.8393064, y: -2.2430568}
-    m_outControlOffset: {x: 1.8393071, y: 1.0318062}
+    m_inControlOffset: {x: 0.23085678, y: -1.1568017}
+    m_outControlOffset: {x: 1.4374213, y: -1.1645454}
   - m_inAnchorIndex: 1
     m_outAnchorIndex: 2
     m_inControlOffset: {x: -3.902407, y: 2.8437424}
     m_outControlOffset: {x: 1.8393078, y: 1.0318062}
+  - m_inAnchorIndex: 2
+    m_outAnchorIndex: 3
+    m_inControlOffset: {x: -1.7525529, y: -0.8826721}
+    m_outControlOffset: {x: 0.37329388, y: -1.5971911}
+  - m_inAnchorIndex: 3
+    m_outAnchorIndex: 4
+    m_inControlOffset: {x: 0.10621452, y: 1.423393}
+    m_outControlOffset: {x: 0.37329364, y: -1.5971911}
+  - m_inAnchorIndex: 4
+    m_outAnchorIndex: 5
+    m_inControlOffset: {x: 0.10621452, y: 1.4233928}
+    m_outControlOffset: {x: -0.2728603, y: 1.1961803}
+  - m_inAnchorIndex: 5
+    m_outAnchorIndex: 0
+    m_inControlOffset: {x: 0.17580032, y: -1.7278477}
+    m_outControlOffset: {x: -0.2728603, y: 1.1961805}
 --- !u!4 &1689612047
 Transform:
   m_ObjectHideFlags: 0
