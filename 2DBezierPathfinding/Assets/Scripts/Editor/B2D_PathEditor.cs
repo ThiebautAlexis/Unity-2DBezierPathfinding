@@ -10,7 +10,8 @@ public class B2D_PathEditor : Editor
     private SerializedProperty m_pathPoints = null;
     private SerializedProperty m_segments = null;
 
-    private int m_selectedIndex = -1; 
+    private int m_selectedIndex = -1;
+    private Vector3 m_localPositionOffset = Vector3.zero;
     #endregion
 
 
@@ -21,7 +22,18 @@ public class B2D_PathEditor : Editor
     /// </summary>
     private void DrawPath()
     {
+
         SerializedProperty _p;
+        if (m_localPositionOffset != ((B2D_Path)serializedObject.targetObject).transform.position)
+        {
+            Vector2 _offset = ((B2D_Path)serializedObject.targetObject).transform.position - m_localPositionOffset;
+            for (int i = 0; i < m_pathPoints.arraySize; i++)
+            {
+                _p = m_pathPoints.GetArrayElementAtIndex(i);
+                _p.FindPropertyRelative("m_position").vector2Value = _p.FindPropertyRelative("m_position").vector2Value + _offset;
+            }
+            m_localPositionOffset = ((B2D_Path)serializedObject.targetObject).transform.position;
+        }
         for (int i = 0; i < m_pathPoints.arraySize; i++)
         {
             _p = m_pathPoints.GetArrayElementAtIndex(i);
@@ -68,10 +80,11 @@ public class B2D_PathEditor : Editor
 
             Handles.DrawBezier(_startPosition, _endPosition, _startPosition + _p.FindPropertyRelative("m_inControlOffset").vector2Value, _endPosition + _p.FindPropertyRelative("m_outControlOffset").vector2Value, Color.green, null, 1.0f); 
             
-            if(Handles.Button(B2D_BezierUtility.CubicCurve(_startPosition, _endPosition, _startPosition + _p.FindPropertyRelative("m_inControlOffset").vector2Value, _endPosition + _p.FindPropertyRelative("m_outControlOffset").vector2Value, .5f), Quaternion.identity, .05f, .05f, Handles.RectangleHandleCap))
+            if(Handles.Button(B2D_BezierUtility.EvaluateCubicCurve(_startPosition, _endPosition, _startPosition + _p.FindPropertyRelative("m_inControlOffset").vector2Value, _endPosition + _p.FindPropertyRelative("m_outControlOffset").vector2Value, .5f), Quaternion.identity, .05f, .05f, Handles.RectangleHandleCap))
             {
                 RemoveSegment(i); 
             }
+            Handles.Label(B2D_BezierUtility.EvaluateCubicCurve(_startPosition, _endPosition, _startPosition + _p.FindPropertyRelative("m_inControlOffset").vector2Value, _endPosition + _p.FindPropertyRelative("m_outControlOffset").vector2Value, .5f) + Vector2.down * .25f, B2D_BezierUtility.GetBezierLength(_startPosition, _endPosition, _startPosition + _p.FindPropertyRelative("m_inControlOffset").vector2Value, _endPosition + _p.FindPropertyRelative("m_outControlOffset").vector2Value).ToString());
         }
         serializedObject.ApplyModifiedProperties(); 
     }
@@ -263,6 +276,7 @@ public class B2D_PathEditor : Editor
 
     private void OnEnable()
     {
+        m_localPositionOffset = ((B2D_Path)serializedObject.targetObject).transform.position; 
         m_pathPoints = serializedObject.FindProperty("m_pathPoints");
         m_segments = serializedObject.FindProperty("m_segments"); 
         if(m_pathPoints.arraySize == 0)

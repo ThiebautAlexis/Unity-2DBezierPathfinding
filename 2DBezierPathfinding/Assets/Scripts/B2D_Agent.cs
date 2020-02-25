@@ -7,7 +7,7 @@ public class B2D_Agent : MonoBehaviour
     #region Fields and Properties
     [SerializeField] private B2D_Path m_currentNavigationPath = null;
     [SerializeField] private Vector2 m_destination = Vector2.zero;
-
+    [SerializeField] private float m_speed = 2.0f; 
     private Coroutine m_movementCoroutine = null; 
     #endregion
 
@@ -17,16 +17,18 @@ public class B2D_Agent : MonoBehaviour
     private IEnumerator MoveAlongPath(List<int> _pathIndexes, Vector2 _destination)
     {
         float _delta = 0;
+        float _distance = 0; 
         Vector2 _startPosition = transform.position;
         Vector2 _targetPosition = m_currentNavigationPath.PathPoints[_pathIndexes[0]].Position;
         Vector2 _startTangent, _endTangent;
         B2D_Segment _currentSegment;
-        bool _reverseSegment = false; 
+        bool _reverseSegment = false;
+        _distance = Vector2.Distance(_startPosition, _targetPosition); 
         while (_delta <= 1)
         {
             transform.position = Vector2.Lerp(_startPosition, _targetPosition, _delta);
             yield return null;
-            _delta += Time.deltaTime; 
+            _delta += Time.deltaTime / _distance * m_speed; 
         }
         for (int i = 0; i < _pathIndexes.Count -1; i++)
         {
@@ -36,21 +38,23 @@ public class B2D_Agent : MonoBehaviour
             _currentSegment = m_currentNavigationPath.GetSegment(_pathIndexes[i], _pathIndexes[i + 1], out _reverseSegment);
             _startTangent = _reverseSegment ? (Vector2)transform.position + _currentSegment.OutControlOffset : (Vector2)transform.position + _currentSegment.InControlOffset;
             _endTangent = _reverseSegment ? _targetPosition + _currentSegment.InControlOffset : _targetPosition + _currentSegment.OutControlOffset;
+            _distance = B2D_BezierUtility.GetBezierLength(_startPosition, _targetPosition, _startTangent, _endTangent); 
             while (_delta <= 1)
             {
-                transform.position = B2D_BezierUtility.CubicCurve(_startPosition, _targetPosition, _startTangent, _endTangent, _delta);
+                transform.position = B2D_BezierUtility.EvaluateCubicCurve(_startPosition, _targetPosition, _startTangent, _endTangent, _delta);
                 yield return null;
-                _delta += Time.deltaTime;
+                _delta += Time.deltaTime / _distance * m_speed;
             }
         }
         _startPosition = transform.position;
         _targetPosition = _destination;
-        _delta = 0; 
+        _delta = 0;
+        _distance = Vector2.Distance(_startPosition, _targetPosition); 
         while (_delta <= 1)
         {
             transform.position = Vector2.Lerp(_startPosition, _targetPosition, _delta);
             yield return null;
-            _delta += Time.deltaTime;
+            _delta += Time.deltaTime / _distance * m_speed;
         }
         m_movementCoroutine = null; 
     }
@@ -76,7 +80,6 @@ public class B2D_Agent : MonoBehaviour
     {
         SetPath(m_destination); 
     }
-
 
     private void OnDrawGizmos()
     {
