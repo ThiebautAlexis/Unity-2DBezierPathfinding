@@ -35,7 +35,7 @@ namespace EnhancedHandles
             switch (_e.type)
             {
                 case EventType.MouseDown:
-                    if (HandleUtility.nearestControl == ControlId && _e.button == 0)
+                    if (HandleUtility.nearestControl == ControlId && _e.button == 1)
                     {
                         GUIUtility.hotControl = ControlId;
                         GUIUtility.keyboardControl = ControlId;
@@ -45,7 +45,7 @@ namespace EnhancedHandles
                     }
                     break;
                 case EventType.MouseUp:
-                    if (GUIUtility.hotControl == ControlId && _e.button == 0)
+                    if (GUIUtility.hotControl == ControlId && _e.button == 1)
                     {
                         GUIUtility.hotControl = 0;
                         _e.Use();

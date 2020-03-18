@@ -138,6 +138,20 @@ namespace Geometry
             return _barycentric.IsInside;
         }
 
+        /// <summary>
+        /// Return if the _position is in the triangle composed by the 3 vertices
+        /// </summary>
+        /// <param name="_position"></param>
+        /// <param name="_vertex1"></param>
+        /// <param name="_vertex2"></param>
+        /// <param name="_vertex3"></param>
+        /// <returns></returns>
+        public static bool IsInTriangle(Vector3 _position, Vector3 _vertex1, Vector3 _vertex2, Vector3 _vertex3)
+        {
+            Barycentric _barycentric = new Barycentric(_vertex1, _vertex2, _vertex3, _position);
+            return _barycentric.IsInside; 
+        }
+
         public static bool IsInAnyTriangle(Vector3 _position, List<Triangle> _triangles)
         {
             for (int i = 0; i < _triangles.Count; i++)
@@ -168,15 +182,17 @@ namespace Geometry
 
         #region int
         /// <summary>
-        /// Return the sign of the angle between [StartPoint EndPoint] and [StartPoint Point]
+        /// Return the sign of the angle _a _b _c
         /// </summary>
         /// <param name="_start">Start point</param>
         /// <param name="_end">End Point</param>
         /// <param name="_point">Point</param>
         /// <param name="debug"></param>
         /// <returns>Sign of the angle between the three points (if 0 or 180 or -180, return 0)</returns>
-        public static int AngleSign(Vector3 _start, Vector3 _end, Vector3 _point, bool debug = false)
+        public static int AngleSign(Vector3 _a, Vector3 _b, Vector3 _c, bool debug = false)
         {
+            return (int)Mathf.Sign((_c.x - _a.x) * (-_b.y + _a.y) + (_c.y - _a.y) * (_b.x - _a.x));
+            /* LEGACY
             Vector3 _ref = _end - _start;
             Vector3 _angle = _point - _start;
             if (debug) Debug.Log($"{_start} --> {_end} // {_point} = {Vector3.SignedAngle(_ref, _angle, Vector3.up)}");
@@ -184,6 +200,7 @@ namespace Geometry
             if (_alpha == 0 || _alpha == 180 || _alpha == -180) return 0;
             if (_alpha > 0) return 1;
             return -1;
+            */
         }
         #endregion
 
