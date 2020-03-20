@@ -25,6 +25,12 @@ namespace Geometry
         {
             m_verticesIndex = new int[3] { _a, _b, _c }; 
         }
+
+        public Triangle(Vertex _a, Vertex _b, Vertex _c)
+        {
+            m_verticesIndex = new int[3] { _a.Index, _b.Index, _c.Index };
+            m_vertices = new Vector3[3] { _a.Position, _b.Position, _c.Position };
+        }
         #endregion
 
         #region Methods

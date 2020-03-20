@@ -22,6 +22,11 @@ namespace Geometry
             m_position = _position;
             IsConvex = _isConvex; 
         }
+        public Vertex(int _index, Vector2 _position)
+        {
+            m_index = _index;
+            m_position = _position;
+        }
         #endregion
 
         #region Methods

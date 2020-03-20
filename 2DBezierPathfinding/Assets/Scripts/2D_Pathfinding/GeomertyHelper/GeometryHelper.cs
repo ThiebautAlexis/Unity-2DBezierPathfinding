@@ -52,9 +52,10 @@ namespace Geometry
         /// <returns>return true if segements intersect</returns>
         public static bool IsIntersecting(Vector3 _a, Vector3 _b, Vector3 _c, Vector3 _d)
         {
-
+            //Debug.DrawLine(_a, _b, Color.red, 1200);
+            //Debug.DrawLine(_c, _d, Color.blue, 1200);
             Vector3 _ab = _b - _a; // I
-            float _anglesign = AngleSign(_a, _b, _c);
+            float _anglesign = AngleSign(_a, _b, _c, true);
             Vector3 _cd = _anglesign < 0 ? _d - _c : _c - _d; // J 
 
             Vector3 _pointLeft = _anglesign < 0 ? _c : _d;
@@ -64,10 +65,10 @@ namespace Geometry
             if (_denominator != 0)
             {
                 //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
-                float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
+                float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.y) + (_ab.z * _a.x) - (_ab.y * _pointLeft.x)) / _denominator;
 
                 //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
-                float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + (_cd.x * _pointLeft.z)) / _denominator;
+                float _k = ((_cd.y * _a.x) - (_cd.y * _pointLeft.x) - (_cd.x * _a.z) + (_cd.x * _pointLeft.y)) / _denominator;
 
 
                 if ((_m >= 0 && _m <= 1 && _k >= 0 && _k <= 1))
@@ -75,9 +76,9 @@ namespace Geometry
 
                     if (Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)) > .1f)
                     {
+                        //Debug.Log("Too far --> " + Vector3.Distance((_a + _k * _ab), (_pointLeft + _m * _cd)));
                         return false;
                     }
-
                     return true;
                 }
             }
@@ -103,10 +104,10 @@ namespace Geometry
             if (_denominator != 0)
             {
                 //  m =    (     -Ix*A.y      +      Ix*Cy     +      Iy*Ax     -      Iy*Cx )
-                float _m = ((-_ab.x * _a.z) + (_ab.x * _pointLeft.z) + (_ab.z * _a.x) - (_ab.z * _pointLeft.x)) / _denominator;
+                float _m = ((-_ab.x * _a.y) + (_ab.x * _pointLeft.y) + (_ab.z * _a.x) - (_ab.y * _pointLeft.y)) / _denominator;
 
                 //  k =    (     Jy*Ax     -      Jy*Cx     -      Jx*Ay     +      Jx*Cy )
-                float _k = ((_cd.z * _a.x) - (_cd.z * _pointLeft.x) - (_cd.x * _a.z) + (_cd.x * _pointLeft.z)) / _denominator;
+                float _k = ((_cd.y * _a.x) - (_cd.y * _pointLeft.x) - (_cd.x * _a.y) + (_cd.x * _pointLeft.y)) / _denominator;
 
                 //Debug.Log(_m + " " + _k); 
 
@@ -181,6 +182,23 @@ namespace Geometry
         #endregion
 
         #region int
+        public static int AngleSign(Vector3 _start, Vector3 _end, Vector3 _point, bool debug = false)
+        {
+            Vector3 _p1 = _end - _start ; // First Vector of the triangle
+            Vector3 _p2 = _point - _start; // Second Vector of the triangle
+            float _alpha = Mathf.Acos((Vector3.Dot(_p1, _p2) / (_p1.magnitude * _p2.magnitude)));
+            if (debug)
+            {
+                if ((int)Mathf.Sign(_alpha * Mathf.Rad2Deg) > 0)
+                {
+                    Debug.DrawRay(_start, _p1, Color.green, 1200);
+                    Debug.DrawRay(_start, _p2, Color.magenta, 1200);
+                    Debug.Log(_alpha * Mathf.Rad2Deg);
+                }               
+            }
+            return (int)Mathf.Sign(_alpha * Mathf.Rad2Deg);
+        }
+
         /// <summary>
         /// Return the sign of the angle _a _b _c
         /// </summary>
@@ -189,7 +207,7 @@ namespace Geometry
         /// <param name="_point">Point</param>
         /// <param name="debug"></param>
         /// <returns>Sign of the angle between the three points (if 0 or 180 or -180, return 0)</returns>
-        public static int AngleSign(Vector3 _a, Vector3 _b, Vector3 _c, bool debug = false)
+        public static int AngleSignClockWise(Vector3 _a, Vector3 _b, Vector3 _c, bool debug = false)
         {
             Vector3 _p1 = _c - _a; // First Vector of the triangle
             Vector3 _p2 = _c - _b; // Second Vector of the triangle
@@ -198,6 +216,7 @@ namespace Geometry
             {
                 _alpha -= Mathf.PI; 
             }
+            if (debug) Debug.Log(IsClockwise(_a, _b, _c)); 
             return (int)Mathf.Sign(_alpha * Mathf.Rad2Deg); 
         }
 
@@ -224,6 +243,11 @@ namespace Geometry
                 }
             }
             return triangles.OrderBy(t => Vector3.Distance(t.CenterPosition, _position)).FirstOrDefault();
+        }
+
+        public static List<Triangle> GetNeighbourTriangles(Triangle _comparedTriangle, List<Triangle> _triangleDataBase)
+        {
+            return _triangleDataBase.Where(t => GetVerticesIndexInCommon(_comparedTriangle, t).Length == 2).ToList(); 
         }
         #endregion
 
