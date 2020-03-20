@@ -191,16 +191,19 @@ namespace Geometry
         /// <returns>Sign of the angle between the three points (if 0 or 180 or -180, return 0)</returns>
         public static int AngleSign(Vector3 _a, Vector3 _b, Vector3 _c, bool debug = false)
         {
-            return (int)Mathf.Sign((_c.x - _a.x) * (-_b.y + _a.y) + (_c.y - _a.y) * (_b.x - _a.x));
-            /* LEGACY
-            Vector3 _ref = _end - _start;
-            Vector3 _angle = _point - _start;
-            if (debug) Debug.Log($"{_start} --> {_end} // {_point} = {Vector3.SignedAngle(_ref, _angle, Vector3.up)}");
-            float _alpha = Vector3.SignedAngle(_ref, _angle, Vector3.up);
-            if (_alpha == 0 || _alpha == 180 || _alpha == -180) return 0;
-            if (_alpha > 0) return 1;
-            return -1;
-            */
+            Vector3 _p1 = _c - _a; // First Vector of the triangle
+            Vector3 _p2 = _c - _b; // Second Vector of the triangle
+            float _alpha = Mathf.Acos((Vector3.Dot(_p1, _p2) / (_p1.magnitude * _p2.magnitude)));
+            if (IsClockwise(_a, _b, _c) == -1)
+            {
+                _alpha -= Mathf.PI; 
+            }
+            return (int)Mathf.Sign(_alpha * Mathf.Rad2Deg); 
+        }
+
+        public static int IsClockwise(Vector2 _a, Vector2 _b, Vector2 _c)
+        {            
+            return (int)Mathf.Sign((_b.x - _a.x)*(_b.y+_a.y) + (_c.x - _b.x)*(_c.y + _b.y) + (_a.x - _c.x)*(_a.y + _c.y)); 
         }
         #endregion
 

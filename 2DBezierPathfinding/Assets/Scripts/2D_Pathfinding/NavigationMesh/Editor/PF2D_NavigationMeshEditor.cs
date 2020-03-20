@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -10,7 +10,8 @@ namespace Pathfinding2D
     public class PF2D_NavigationMeshEditor : Editor
     {
         #region Fields and Properties
-        private SerializedProperty m_vertices = null;
+        private SerializedProperty m_meshHull = null;
+        private SerializedProperty m_holes = null; 
         private Vector3 m_localPositionOffset = Vector3.zero;
         private Vector2 m_mousePos;
 
@@ -21,82 +22,153 @@ namespace Pathfinding2D
         #region Methods
 
         #region Original Methods
+        private void ApplyPositionChanges()
+        {
+            SerializedProperty _p; 
+            if (m_localPositionOffset != ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position)
+            {
+                Vector2 _offset = ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position - m_localPositionOffset;
+                for (int i = 0; i < m_meshHull.FindPropertyRelative("m_vertices").arraySize; i++)
+                {
+                    _p = m_meshHull.FindPropertyRelative("m_vertices").GetArrayElementAtIndex(i);
+                    _p.vector2Value = _p.vector2Value + _offset;
+                }
+                for (int h = 0; h < m_holes.arraySize; h++)
+                {
+                    for (int i = 0; i < m_holes.GetArrayElementAtIndex(h).FindPropertyRelative("m_vertices").arraySize; i++)
+                    {
+                        _p = m_holes.GetArrayElementAtIndex(h).FindPropertyRelative("m_vertices").GetArrayElementAtIndex(i);
+                        _p.vector2Value = _p.vector2Value + _offset;
+                    }
+                }
+                m_localPositionOffset = ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position;
+            }
+        }
+
         private void InitNavigationMesh()
         {
-            m_vertices.ClearArray();
+            m_meshHull.FindPropertyRelative("m_vertices").ClearArray();
 
             SerializedProperty _property;
             for (int i = 0; i < 3; i++)
             {
-                m_vertices.InsertArrayElementAtIndex(i);
-                _property = m_vertices.GetArrayElementAtIndex(i);
+                m_meshHull.FindPropertyRelative("m_vertices").InsertArrayElementAtIndex(i);
+                _property = m_meshHull.FindPropertyRelative("m_vertices").GetArrayElementAtIndex(i);
                 _property.vector2Value = new Vector2(i%2, i>1 ? 1 : 0);
             }
             serializedObject.ApplyModifiedProperties(); 
         }
 
-        private void DrawNavigationMeshHandles()
+        private void DrawInspector(SerializedProperty _polygon, string _label, int _index = -1)
         {
-            if (m_vertices.arraySize < 3)
+            SerializedProperty _prop;
+            GUILayout.BeginHorizontal();
+            _polygon.FindPropertyRelative("m_displayPoints").boolValue = EditorGUILayout.Foldout(_polygon.FindPropertyRelative("m_displayPoints").boolValue, new GUIContent(_label), true);
+            Color _originalColor = GUI.color;
+            GUI.color = _polygon.FindPropertyRelative("m_isSelected").boolValue ? Color.grey : Color.white;
+            if (GUILayout.Button("Select", GUILayout.MaxWidth((Screen.width / 4))))
+            {
+                SetSelected(_polygon);
+            }
+            GUI.color = _originalColor;
+            GUILayout.EndHorizontal(); 
+            if (_polygon.FindPropertyRelative("m_displayPoints").boolValue)
+            {
+                if(_index == -1)
+                {
+                    if (GUILayout.Button("Reverse"))
+                    {
+                        ReverseArray(_polygon.FindPropertyRelative("m_vertices"));
+                    }
+                }
+                else
+                {
+                    GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Reverse"))
+                    {
+                        ReverseArray(_polygon.FindPropertyRelative("m_vertices"));
+                    }
+                    if (GUILayout.Button("Destroy"))
+                    {
+                        m_holes.DeleteArrayElementAtIndex(_index);
+                        serializedObject.ApplyModifiedProperties(); 
+                        UpdateDrawnMesh();
+                        GUILayout.EndHorizontal();
+                        return; 
+                    }
+                    GUILayout.EndHorizontal();
+                }
+
+                for (int i = 0; i < _polygon.FindPropertyRelative("m_vertices").arraySize; i++)
+                {
+                    _prop = _polygon.FindPropertyRelative("m_vertices").GetArrayElementAtIndex(i);
+                    GUILayout.BeginHorizontal();
+                    _prop.vector2Value = EditorGUILayout.Vector2Field($"Point {i}", _prop.vector2Value);
+                    if (GUILayout.Button("x", GUILayout.MinWidth(Screen.width / 12), GUILayout.MaxWidth(Screen.width / 8)) && _polygon.FindPropertyRelative("m_vertices").arraySize > 3)
+                    {
+                        _polygon.FindPropertyRelative("m_vertices").DeleteArrayElementAtIndex(i);
+                        serializedObject.ApplyModifiedProperties();
+                        UpdateDrawnMesh();
+                    }
+                    GUILayout.EndHorizontal();
+                }
+            }
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawPolygonHandles(SerializedProperty _polygon, Color _c)
+        {
+            SerializedProperty _vectorArray = _polygon.FindPropertyRelative("m_vertices"); 
+            if (m_meshHull.FindPropertyRelative("m_vertices").arraySize < 3)
             {
                 InitNavigationMesh();
             }
             SerializedProperty _p;
-            if (m_localPositionOffset != ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position)
+            Handles.color = _c;
+            for (int i = 0; i < _vectorArray.arraySize; i++)
             {
-                Vector2 _offset = ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position - m_localPositionOffset;
-                for (int i = 0; i < m_vertices.arraySize; i++)
-                {
-                    _p = m_vertices.GetArrayElementAtIndex(i);
-                    _p.vector2Value = _p.vector2Value + _offset;
-                }
-                m_localPositionOffset = ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position;
-            }
-            Handles.color = Color.green; 
-            for (int i = 0; i < m_vertices.arraySize; i++)
-            {
-                _p = m_vertices.GetArrayElementAtIndex(i);
+                _p = _vectorArray.GetArrayElementAtIndex(i);
                 _p.vector2Value = Handles.FreeMoveHandle(_p.vector2Value, Quaternion.identity, .05f, Vector2.zero, Handles.DotHandleCap);
-                Handles.DrawLine(_p.vector2Value, m_vertices.GetArrayElementAtIndex((i + 1) % m_vertices.arraySize).vector2Value); 
-                Handles.Label(_p.vector2Value, i.ToString());
+                Handles.DrawLine(_p.vector2Value, _vectorArray.GetArrayElementAtIndex((i + 1) % _vectorArray.arraySize).vector2Value); 
+                Handles.Label(_p.vector2Value - Vector2.one * .1f, i.ToString());
             }
-            /// Get the two closest vertices to draw a button handle that add a triangle.
-            m_mousePos = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition).origin;
-            
-            int _closestVertex = 0, _nextVertex = 1;
-            float _minDist = Vector2.Distance(m_vertices.GetArrayElementAtIndex(0).vector2Value, m_mousePos); 
 
-            float _currentDist = 0.0f;
-            for (int i = 2; i < m_vertices.arraySize; i++)
+            if(_polygon.FindPropertyRelative("m_isSelected").boolValue)
             {
-                _currentDist = Vector2.Distance(m_vertices.GetArrayElementAtIndex(i).vector2Value, m_mousePos); 
-                if(_currentDist <= .25f)
+                /// Get the two closest vertices to draw a button handle that add a triangle.
+                m_mousePos = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition).origin;
+
+                int _closestVertex = 0, _nextVertex = 1;
+                float _minDist = Vector2.Distance(_vectorArray.GetArrayElementAtIndex(0).vector2Value, m_mousePos);
+
+                float _currentDist = 0.0f;
+                for (int i = 2; i < _vectorArray.arraySize; i++)
                 {
-                    serializedObject.ApplyModifiedProperties();
-                    return; 
+                    _currentDist = Vector2.Distance(_vectorArray.GetArrayElementAtIndex(i).vector2Value, m_mousePos);
+                    if (_currentDist <= .25f)
+                    {
+                        serializedObject.ApplyModifiedProperties();
+                        return;
+                    }
+                    if (_currentDist < _minDist)
+                    {
+                        _closestVertex = i;
+                        _minDist = _currentDist;
+                    }
                 }
-                if ( _currentDist < _minDist)
-                {
-                    _closestVertex = i;
-                    _minDist = _currentDist; 
-                }
+                _minDist = Vector2.Distance(m_mousePos, _vectorArray.GetArrayElementAtIndex(_closestVertex == _vectorArray.arraySize - 1 ? 0 : _closestVertex + 1).vector2Value);
+                _currentDist = Vector2.Distance(m_mousePos, _vectorArray.GetArrayElementAtIndex(_closestVertex == 0 ? _vectorArray.arraySize - 1 : _closestVertex - 1).vector2Value);
+                if (_minDist > _currentDist)
+                    _closestVertex = _closestVertex == 0 ? _vectorArray.arraySize - 1 : _closestVertex - 1;
+
+                _nextVertex = _closestVertex == _vectorArray.arraySize - 1 ? 0 : _closestVertex + 1;
+
+
+                Vector2 _normal = Geometry.GeometryHelper.GetNormalPoint(m_mousePos, _vectorArray.GetArrayElementAtIndex(_closestVertex).vector2Value, _vectorArray.GetArrayElementAtIndex(_nextVertex).vector2Value);
+                PF2D_ExtendedHandlers.PolygonSigmentHandle(ref _normal, .05f, Quaternion.identity, () => AddVertex(_vectorArray, _closestVertex, m_mousePos));
             }
-            _minDist = Vector2.Distance(m_mousePos, m_vertices.GetArrayElementAtIndex(_closestVertex == m_vertices.arraySize-1 ? 0 : _closestVertex+1).vector2Value); 
-            _currentDist = Vector2.Distance(m_mousePos, m_vertices.GetArrayElementAtIndex(_closestVertex == 0 ? m_vertices.arraySize - 1 : _closestVertex - 1).vector2Value);
-            if (_minDist > _currentDist)
-                _closestVertex = _closestVertex == 0 ? m_vertices.arraySize - 1 : _closestVertex - 1; 
-
-            _nextVertex = _closestVertex == m_vertices.arraySize - 1 ? 0 : _closestVertex + 1;
-
             HandleUtility.Repaint();
-            Handles.color = Color.red;
-            Handles.DrawLine(m_mousePos, m_vertices.GetArrayElementAtIndex(_closestVertex).vector2Value);
-            Handles.DrawLine(m_mousePos, m_vertices.GetArrayElementAtIndex(_nextVertex).vector2Value);
-
-            Vector2 _normal = Geometry.GeometryHelper.GetNormalPoint(m_mousePos, m_vertices.GetArrayElementAtIndex(_closestVertex).vector2Value, m_vertices.GetArrayElementAtIndex(_nextVertex).vector2Value);
-            PF2D_ExtendedHandlers.PolygonSigmentHandle(ref _normal, .05f, Quaternion.identity, () => AddVertex(_closestVertex, m_mousePos));
-
-            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive)); 
+            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -107,25 +179,32 @@ namespace Pathfinding2D
                 Debug.Log("Mesh is null");
                 return;
             }
-            Graphics.DrawMesh(m_drawnMesh, (serializedObject.targetObject as PF2D_NavigationMesh).transform.position, Quaternion.identity, AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat") as Material, 1, _cam); 
+            Graphics.DrawMesh(m_drawnMesh, Vector3.zero, Quaternion.identity, AssetDatabase.GetBuiltinExtraResource<Material>("Default-Diffuse.mat") as Material, 1, _cam); 
         }
 
-        private void AddVertex(int _previousVertex, Vector2 _mousePosition)
+        private void AddVertex(SerializedProperty _array, int _previousVertex, Vector2 _mousePosition)
         {
-            m_vertices.InsertArrayElementAtIndex(_previousVertex + 1);
-            m_vertices.GetArrayElementAtIndex(_previousVertex + 1).vector2Value = _mousePosition;
+            _array.InsertArrayElementAtIndex(_previousVertex + 1);
+            _array.GetArrayElementAtIndex(_previousVertex + 1).vector2Value = _mousePosition;
+            serializedObject.ApplyModifiedProperties(); 
         }
         
         private void UpdateDrawnMesh()
         {
             serializedObject.ApplyModifiedProperties(); 
-            Debug.Log("Update Mesh"); 
             (serializedObject.targetObject as PF2D_NavigationMesh).TriangulateMesh(); 
             m_drawnMesh = new Mesh();
-            Vector3[] _vertices = new Vector3[m_vertices.arraySize];
-            for (int i = 0; i < m_vertices.arraySize; i++)
+            List<Vector3> _vertices = new List<Vector3>();
+            for (int i = 0; i < m_meshHull.FindPropertyRelative("m_vertices").arraySize; i++)
             {
-                _vertices[i] = m_vertices.GetArrayElementAtIndex(i).vector2Value; 
+                _vertices.Add(m_meshHull.FindPropertyRelative("m_vertices").GetArrayElementAtIndex(i).vector2Value); 
+            }
+            for (int i = 0; i < m_holes.arraySize; i++)
+            {
+                for (int j = 0; j < m_holes.GetArrayElementAtIndex(i).FindPropertyRelative("m_vertices").arraySize; j++)
+                {
+                    _vertices.Add(m_holes.GetArrayElementAtIndex(i).FindPropertyRelative("m_vertices").GetArrayElementAtIndex(j).vector2Value); 
+                }
             }
             SerializedProperty _trianglesProperty = serializedObject.FindProperty("m_triangles"); 
             int[] _triangles = new int[_trianglesProperty.arraySize];
@@ -133,7 +212,7 @@ namespace Pathfinding2D
             {
                 _triangles[i] = _trianglesProperty.GetArrayElementAtIndex(i).intValue;
             }
-            m_drawnMesh.vertices = _vertices;
+            m_drawnMesh.vertices = _vertices.ToArray();
             m_drawnMesh.triangles = _triangles;
         }
 
@@ -143,18 +222,45 @@ namespace Pathfinding2D
             if (_e.type == EventType.KeyDown && _e.keyCode == KeyCode.Space)
                 UpdateDrawnMesh(); 
         }
+
+        private void ReverseArray(SerializedProperty _vectorArray)
+        {
+            List<Vector2> _positions = new List<Vector2>();
+            for (int i = 0; i < _vectorArray.arraySize; i++)
+            {
+                _positions.Add(_vectorArray.GetArrayElementAtIndex(i).vector2Value);
+            }
+            _positions.Reverse();
+            for (int i = 0; i < _vectorArray.arraySize; i++)
+            {
+                _vectorArray.GetArrayElementAtIndex(i).vector2Value = _positions[i];
+            }
+            serializedObject.ApplyModifiedProperties(); 
+        }
+
+        private void SetSelected(SerializedProperty _selectedPolygon)
+        {
+            m_meshHull.FindPropertyRelative("m_isSelected").boolValue = false;
+            for (int i = 0; i < m_holes.arraySize; i++)
+            {
+                m_holes.GetArrayElementAtIndex(i).FindPropertyRelative("m_isSelected").boolValue = false; 
+            }
+            _selectedPolygon.FindPropertyRelative("m_isSelected").boolValue = true;
+            serializedObject.ApplyModifiedProperties(); 
+        }
         #endregion
 
         #region Unity Methods
         private void OnEnable()
         {
             m_localPositionOffset = ((PF2D_NavigationMesh)serializedObject.targetObject).transform.position;
-            m_vertices = serializedObject.FindProperty("m_vertices");
-            UpdateDrawnMesh(); 
-            if(m_vertices.arraySize < 3)
+            m_meshHull = serializedObject.FindProperty("m_meshHull");
+            m_holes = serializedObject.FindProperty("m_holes"); 
+            if(m_meshHull.FindPropertyRelative("m_vertices").arraySize < 3)
             {
                 InitNavigationMesh(); 
             }
+            UpdateDrawnMesh();
             Camera.onPreCull -= DrawMesh;
             Camera.onPreCull += DrawMesh;
         }
@@ -166,8 +272,36 @@ namespace Pathfinding2D
 
         private void OnSceneGUI()
         {
-            DrawNavigationMeshHandles();
+            DrawPolygonHandles(m_meshHull, Color.green);
+            for (int i = 0; i < m_holes.arraySize; i++)
+            {
+                SerializedProperty _array = m_holes.GetArrayElementAtIndex(i);
+                DrawPolygonHandles(_array, Color.red); 
+            }
             HandleEvent();
+            ApplyPositionChanges();
+        }
+
+        public override void OnInspectorGUI()
+        {
+            DrawInspector(m_meshHull, "Navigation Mesh Hull");
+            GUILayout.Space(5);
+            for (int i = 0; i < m_holes.arraySize; i++)
+            {
+                DrawInspector(m_holes.GetArrayElementAtIndex(i), $"Hole n° {i+1}", i); 
+            }
+            GUILayout.Space(5);
+            if (GUILayout.Button("Add Exclusion Zone"))
+            {
+                m_holes.InsertArrayElementAtIndex(m_holes.arraySize);
+                SerializedProperty _p = m_holes.GetArrayElementAtIndex(m_holes.arraySize - 1).FindPropertyRelative("m_vertices");
+                _p.ClearArray();
+                for (int i = 0; i < 3; i++)
+                {
+                    _p.InsertArrayElementAtIndex(i);
+                    _p.GetArrayElementAtIndex(i).vector2Value = new Vector2(i % 2, i > 1 ? 1 : 0);
+                }
+            }
         }
         #endregion
 

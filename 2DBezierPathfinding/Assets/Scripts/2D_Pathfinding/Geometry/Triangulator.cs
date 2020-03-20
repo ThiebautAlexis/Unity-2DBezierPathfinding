@@ -12,7 +12,12 @@ namespace Geometry
             int[] _triangles = new int[((_polygon.NumHoles * 2) + _polygon.NumPoints - 2) * 3];
             int _triIndex = 0;
             LinkedList<Vertex> _polygonVertices = GenerateVerticesList(_polygon);
-
+            //LinkedListNode<Vertex> _v = _polygonVertices.First; 
+            //for (int i = 0; i < _polygonVertices.Count; i++)
+            //{
+            //    Debug.Log(_v.Value.Index + " -> " + _v.Value.Position);
+            //    _v = _v.Next; 
+            //}
             while (_polygonVertices.Count >= 3)
             {
                 LinkedListNode<Vertex> _vertexNode = _polygonVertices.First;
@@ -21,36 +26,32 @@ namespace Geometry
                 {
                     LinkedListNode<Vertex> _prevVertexNode = _vertexNode.Previous == null ? _polygonVertices.Last : _vertexNode.Previous;
                     LinkedListNode<Vertex> _nextVertexNode = _vertexNode.Next == null ? _polygonVertices.First : _vertexNode.Next;
-
                     if (_vertexNode.Value.IsConvex)
                     {
                         if (!TriangleContainsVertex(_prevVertexNode.Value, _vertexNode.Value, _nextVertexNode.Value, _polygonVertices))
                         {
                             if (!_prevVertexNode.Value.IsConvex)
                             {
-                                LinkedListNode<Vertex> _previousOfPrevious = _prevVertexNode.Previous == null ? _polygonVertices.Last : _vertexNode.Previous;
+                                LinkedListNode<Vertex> _previousOfPrevious = _prevVertexNode.Previous == null ? _polygonVertices.Last : _prevVertexNode.Previous;
                                 if (_previousOfPrevious != null)
                                     _prevVertexNode.Value.IsConvex = IsConvex(_previousOfPrevious.Value.Position, _prevVertexNode.Value.Position, _nextVertexNode.Value.Position);
                             }
                             if (!_nextVertexNode.Value.IsConvex)
                             {
-                                LinkedListNode<Vertex> _nextOfNext = _prevVertexNode.Next == null ? _polygonVertices.First : _vertexNode.Next;
+                                LinkedListNode<Vertex> _nextOfNext = _nextVertexNode.Next == null ? _polygonVertices.First : _nextVertexNode.Next;
                                 if (_nextOfNext != null)
-                                    _prevVertexNode.Value.IsConvex = IsConvex(_prevVertexNode.Value.Position, _nextVertexNode.Value.Position, _nextOfNext.Value.Position);
+                                    _nextVertexNode.Value.IsConvex = IsConvex(_prevVertexNode.Value.Position, _nextVertexNode.Value.Position, _nextOfNext.Value.Position);
                             }
 
                             _triangles[_triIndex * 3 + 2] = _prevVertexNode.Value.Index;
                             _triangles[_triIndex * 3 + 1] = _vertexNode.Value.Index;
                             _triangles[_triIndex * 3] = _nextVertexNode.Value.Index;
                             _polygonVertices.Remove(_vertexNode);
-                            Debug.Log("Remove at " + i); 
                             _hasRemovedVertex = true;
                             _triIndex++;
                             break;
                         }
                     }
-                    else
-                        Debug.Log("Ear Is not Convex at " + i); 
                     _vertexNode = _vertexNode.Next == null ? _polygonVertices.First : _vertexNode.Next;
                 }
                 if(!_hasRemovedVertex)
@@ -59,12 +60,8 @@ namespace Geometry
                     return null; 
                 }
             }
-
-
             return _triangles; 
         }
-
-
 
         // check if triangle contains any verts (note, only necessary to check reflex verts).
         private static bool TriangleContainsVertex(Vertex v0, Vertex v1, Vertex v2, LinkedList<Vertex> _polygonVertices)
@@ -256,7 +253,7 @@ namespace Geometry
 
         public static bool IsConvex(Vector2 v0, Vector2 v1, Vector2 v2)
         {
-            return GeometryHelper.AngleSign(v0, v2, v1) == -1; 
+            return GeometryHelper.AngleSign(v0, v2, v1) == 1; 
         }
 
         public struct HoleData
