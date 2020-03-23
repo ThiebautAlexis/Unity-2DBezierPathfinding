@@ -155,7 +155,7 @@ namespace Pathfinding2D
 
             _currentTriangle = null;
             #region Initialise Portal Vertices
-            /*
+            
             //Initialize portal vertices between each triangles
             for (int i = 1; i < _absoluteTrianglePath.Count - 1; i++)
             {
@@ -166,11 +166,12 @@ namespace Pathfinding2D
                 {
                     int k = j + 1 >= _currentTriangle.Vertices.Length ? 0 : j + 1;
                     _vertex1 = _currentTriangle.Vertices[j];
-                    _vertex2 = _currentTriangle.Vertices[k]; ;
+                    _vertex2 = _currentTriangle.Vertices[k];
+                    if (_absoluteTrianglePath[i + 1].Vertices.Where(v => v == _vertex1 || v == _vertex2).ToArray().Length != 2) continue; 
                     if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
                     {
                         //Debug.Log(_startLinePoint + "///" + _endLinePoint + " intersect with " + _vertex1 + "///" + _vertex2); 
-                        if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
+                        if (GeometryHelper.AngleSign2D(_startLinePoint, _endLinePoint, _vertex1) > 0)
                         {
                             _leftVertices[i] = _vertex2;
                             _rightVertices[i] = _vertex1;
@@ -185,7 +186,6 @@ namespace Pathfinding2D
                     }
                 }
             }
-            */
             //Initialize start portal vertices
             _startLinePoint = _origin;
             _startLinePoint.y = _absoluteTrianglePath[1].CenterPosition.y;
@@ -199,7 +199,7 @@ namespace Pathfinding2D
                 _vertex2 = _currentTriangle.Vertices[k]; ;
                 if (GeometryHelper.IsIntersecting(_startLinePoint, _endLinePoint, _vertex1, _vertex2))
                 {
-                    if (GeometryHelper.AngleSign(_startLinePoint, _endLinePoint, _vertex1) > 0)
+                    if (GeometryHelper.AngleSign2D(_startLinePoint, _endLinePoint, _vertex1) > 0)
                     {
                         _leftVertices[0] = _vertex2;
                         _rightVertices[0] = _vertex1;
@@ -216,8 +216,6 @@ namespace Pathfinding2D
 
             _leftVertices[_leftVertices.Length - 1] = _destination;
             _rightVertices[_rightVertices.Length - 1] = _destination;
-
-            return null; 
             #endregion
 
             //Step through the channel
@@ -243,10 +241,10 @@ namespace Pathfinding2D
                 if (_nextLeftVertex != _currentLeftVertex && i > _leftIndex)
                 {
                     //If the next point does not widden funnel, update 
-                    if (GeometryHelper.AngleSign(_apex, _currentLeftVertex, _nextLeftVertex) >= 0)
+                    if (GeometryHelper.AngleSign2D(_apex, _currentLeftVertex, _nextLeftVertex) >= 0)
                     {
                         //if next side cross the other side, place new apex
-                        if (GeometryHelper.AngleSign(_apex, _currentRightVertex, _nextLeftVertex) > 0)
+                        if (GeometryHelper.AngleSign2D(_apex, _currentRightVertex, _nextLeftVertex) > 0)
                         {
                             // Set the new Apex
                             _apex = _currentRightVertex;
@@ -283,10 +281,10 @@ namespace Pathfinding2D
                 if (_nextRightVertex != _currentRightVertex && i > _rightIndex)
                 {
                     //If the next point does not widden funnel, update 
-                    if (GeometryHelper.AngleSign(_apex, _currentRightVertex, _nextRightVertex) <= 0)
+                    if (GeometryHelper.AngleSign2D(_apex, _currentRightVertex, _nextRightVertex) <= 0)
                     {
                         //if next side cross the other side, place new apex
-                        if (GeometryHelper.AngleSign(_apex, _currentLeftVertex, _nextRightVertex) < 0)
+                        if (GeometryHelper.AngleSign2D(_apex, _currentLeftVertex, _nextRightVertex) < 0)
                         {
                             //Set the new Apex
                             _apex = _currentLeftVertex;

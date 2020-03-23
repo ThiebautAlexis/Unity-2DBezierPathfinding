@@ -253,7 +253,7 @@ namespace Geometry
 
         public static bool IsConvex(Vector2 v0, Vector2 v1, Vector2 v2)
         {
-            return GeometryHelper.AngleSignClockWise(v0, v2, v1) == 1; 
+            return GeometryHelper.AngleSign2DClockWise(v0, v2, v1) == 1; 
         }
 
         public struct HoleData
