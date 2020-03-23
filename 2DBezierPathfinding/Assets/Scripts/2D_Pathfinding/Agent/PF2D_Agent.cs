@@ -28,7 +28,8 @@ namespace Pathfinding2D
         [SerializeField] private float m_speed = 1.0f;
         [SerializeField] private float m_steerForce = 90.0f;
 
-        [SerializeField] private Vector3 m_velocity = Vector3.zero;
+        private Vector3 m_velocity = Vector3.zero;
+        private Coroutine m_followPathCoroutine = null; 
         #endregion
 
 
@@ -39,7 +40,7 @@ namespace Pathfinding2D
         /// Make the agent follows the path
         /// </summary>
         /// <returns></returns>
-        IEnumerator FollowPath()
+        private IEnumerator FollowPath()
         {
             OnMovementStarted?.Invoke();
             //isMoving = true;
@@ -67,14 +68,6 @@ namespace Pathfinding2D
             float _scalarProduct;
             // List of directions to apply on the avoidance 
             List<Vector3> _obstaclesPos = new List<Vector3>();
-
-
-            /* First the velocity is equal to the normalized direction from the agent position to the next position */
-            /* LEGACY 
-            if (velocity == Vector3.zero)
-                velocity = (_nextPosition - OffsetPosition) * speed;
-            Seek(_nextPosition);
-            */
 
             while (Vector3.Distance(transform.position, m_path.Last()) > m_radius)
             {
@@ -137,7 +130,10 @@ namespace Pathfinding2D
             OnDestinationReached?.Invoke();
         }
 
-
+        /// <summary>
+        /// Apply steer force on Velocity in order to go to the targeted position
+        /// </summary>
+        /// <param name="_target"></param>
         private void Seek(Vector3 _target)
         {
             Vector3 _desiredVelocity = (_target - transform.position).normalized * m_speed;
@@ -146,9 +142,12 @@ namespace Pathfinding2D
             m_velocity += _steer;
         }
 
+        /// <summary>
+        /// Stop the FollowPath Coroutine and call the event OnAgentStopped
+        /// </summary>
         private void StopAgent()
         {
-            StopCoroutine(FollowPath());
+            StopCoroutine(m_followPathCoroutine);
             OnAgentStopped?.Invoke(); 
         }
         #endregion
@@ -160,7 +159,7 @@ namespace Pathfinding2D
             if(m_navMesh && m_destination)
             {
                 m_path = m_navMesh.GetPathToDestination(transform.position, m_destination.transform.position);
-                StartCoroutine(FollowPath()); 
+                m_followPathCoroutine = StartCoroutine(FollowPath()); 
             }
         }
 
